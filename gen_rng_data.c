@@ -31,7 +31,7 @@ int main()
 		for(i = 0; i < N; i++)
 		{
 			data[i] = data[i] / sqrt(count / N);
-			fprintf(fp, "%f", data[i]);
+			fprintf(fp, "%f ", data[i]);
 		}
 	}
 
