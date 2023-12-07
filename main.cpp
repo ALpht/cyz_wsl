@@ -7,27 +7,36 @@ Code, Compile, Run and Debug online from anywhere in world.
 
 *******************************************************************************/
 #include <iostream>
+#include <fstream>
 #include <math.h>
 #include <time.h>
-#define N 10
+#include <vector>
+#define N 1000
 
 using namespace std;
 
-float
-float_to_fixed (float fp, int fracBits)
+float float_to_fixed (float fp, int INTW, int fracBits)
 {
-  float temp = fp * pow (2, fracBits);
-  int intTemp = (int) temp;
-  float result = intTemp / pow (2, fracBits);
-  return result;
+	float upperBound = pow(2.0, INTW - 1) - pow(2.0, -fracBits);
+	float lowerBound = -pow(2.0, INTW - 1);
+	float scaleFactor = pow(2.0, fracBits);
+	
+	float temp = fp * scaleFactor;
+	float result = floor(fp * scaleFactor) / scaleFactor;
+
+	if(result > upperBound)
+		result = upperBound;
+	else if(result < lowerBound)
+		result = lowerBound;
+	else
+		result = result;
+	
+	return result;
 }
 
-float *
-convolution (float filterCoefficient[], float inputs[], int coeLen,
-	     int inputLen)
+float *convolution (float filterCoefficient[], float inputs[], int coeLen, int inputLen)
 {
   float delayElements[coeLen - 1] = { 0 };
-  //float outputs[N];
   float *ptr = (float *) malloc (inputLen * sizeof (float));
 
   for (int i = 0; i < inputLen; i++)
@@ -44,43 +53,85 @@ convolution (float filterCoefficient[], float inputs[], int coeLen,
   return ptr;
 }
 
-int
-main ()
+float *read_file(char fileName[])
 {
-  srand (time (NULL));
+	ifstream inFile;
+	inFile.open(fileName);
+	float temp;
+	static float result[1000];
+	float *ptr = &result[0];
+	int i = 0;
+	
+	while(!inFile.eof())
+	{
+		inFile >> temp;
+		if(!inFile.fail())
+		{
+			result[i] = temp;			
+			i++;
+		}
+	}
+	
+	return ptr;
+}	
+
+void write_file(char fileName[])
+{
+	std::ofstream ofs;
+	
+	ofs.open(fileName);
+	if(!ofs.is_open())
+	{
+		cout << "Wirte file fail\n";
+	}
+	else
+	{
+		
+	}
+}
+
+int main ()
+{
   float FILTER_COE[23] =
     { 0.013239156, 0.0043691504, -0.022531772, -0.036399439, -0.0046777544,
 0.039288234, 0.020806413, -0.059205871, -0.079080485, 0.068135582, 0.30790523, 0.42687139,
 0.30790523, 0.068135582, -0.079080485, -0.059205871, 0.020806413, 0.039288234, -0.0046777544,
 -0.036399439, -0.022531772, 0.0043691504, 0.013239156 };
   float FIXED_FILTER_COE[23];
-  float inputs[10] =
-    { 0.025027, 1.379723, 0.666515, 0.434150, 1.665457, 0.415387, 1.415958,
-0.301792, 0.468457, 0.249128 };
-  float fixedInputs[10];
-  float *ptr1 = NULL, *ptr2 = NULL;
+  float fixedInputs[N];
+  float *floatOutputs = NULL, *fixedOutputs = NULL, *floatInputs =  NULL;
   float outputSNR[15] = { 0 };
+  char fileName[] = "rand_data.txt";
 
-  for (int j = 2; j < 16; j++)
-    {
-      float powerOfFp = 0, powerOfDiff = 0;
-      for (int i = 0; i < N; i++)
+  floatInputs = read_file(fileName);
+
+  for (int j = 1; j < 16; j++)
+  {
+    float powerOfFp = 0, powerOfDiff = 0;
+
+    for (int i = 0; i < N; i++)
 	{
-	  fixedInputs[i] = float_to_fixed (inputs[i], j);
-	  cout << fixedInputs[i] << endl;
+	  fixedInputs[i] = float_to_fixed (floatInputs[i], 1, j);
+	  //cout << fixedInputs[i] << endl;
+	}
+	
+    for (int i = 0; i < 23; i++)
+	{
+	  FIXED_FILTER_COE[i] = float_to_fixed (FILTER_COE[i], 1, j);
 	}
 
-      ptr1 = convolution (FILTER_COE, inputs, 23, N);
-      ptr2 = convolution (FILTER_COE, fixedInputs, 23, N);
-      for (int i = 0; i < N; i++)
+      floatOutputs = convolution (FILTER_COE, floatInputs, 23, N);
+      fixedOutputs = convolution (FILTER_COE, fixedInputs, 23, N);
+
+	  for (int i = 0; i < N; i++)
 	{
-	  //cout<<ptr1[i]<<", "<<ptr2[i]<<endl;
-	  powerOfFp += ptr1[i] * ptr1[i];
-	  powerOfDiff += (ptr1[i] - ptr2[i]) * (ptr1[i] - ptr2[i]);
+	  // cout<<ptr1[i]<<", "<<ptr2[i]<<endl;
+	  powerOfFp += floatOutputs[i] * floatOutputs[i];
+	  powerOfDiff += (floatOutputs[i] - fixedOutputs[i]) * (floatOutputs[i] - fixedOutputs[i]);
 	}
 
-      outputSNR[j - 2] = 10 * log10 (powerOfFp / powerOfDiff);
-      cout << outputSNR[j - 2] << endl;
+      outputSNR[j] = 10 * log10 (powerOfFp / powerOfDiff);
+      cout << outputSNR[j] << endl;
     }
 
   return 0;

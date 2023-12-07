@@ -16,7 +16,8 @@ int main()
 
 	for(i = 0; i < N; i++)
 	{
-		data[i] = (float) rand() / (RAND_MAX + 1.0);
+		//data[i] = (float) rand() / (RAND_MAX + 1.0);
+		data[i] = ((float) rand() / RAND_MAX) * 2.0 - 1.0;
 		count += data[i] * data[i];
 	}
 	
