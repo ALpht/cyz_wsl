@@ -1,16 +1,7 @@
-/******************************************************************************
-
-Welcome to GDB Online.
-GDB online is an online compiler and debugger tool for C, C++, Python, Java, PHP, Ruby, Perl,
-C#, OCaml, VB, Swift, Pascal, Fortran, Haskell, Objective-C, Assembly, HTML, CSS, JS, SQLite, Prolog.
-Code, Compile, Run and Debug online from anywhere in world.
-
-*******************************************************************************/
 #include <iostream>
 #include <fstream>
 #include <math.h>
 #include <time.h>
-#include <vector>
 #define N 1000
 
 using namespace std;
@@ -75,21 +66,6 @@ float *read_file(char fileName[])
 	return ptr;
 }	
 
-void write_file(char fileName[])
-{
-	std::ofstream ofs;
-	
-	ofs.open(fileName);
-	if(!ofs.is_open())
-	{
-		cout << "Wirte file fail\n";
-	}
-	else
-	{
-		
-	}
-}
-
 int main ()
 {
   float FILTER_COE[23] =
@@ -98,21 +74,29 @@ int main ()
 0.30790523, 0.068135582, -0.079080485, -0.059205871, 0.020806413, 0.039288234, -0.0046777544,
 -0.036399439, -0.022531772, 0.0043691504, 0.013239156 };
   float FIXED_FILTER_COE[23];
+  float powerOfFp = 0;
   float fixedInputs[N];
   float *floatOutputs = NULL, *fixedOutputs = NULL, *floatInputs =  NULL;
-  float outputSNR[15] = { 0 };
+  float *semiOutputs = NULL;
+  float outputSNR1[15] = { 0 }, outputSNR2[15] = {0};
   char fileName[] = "rand_data.txt";
+  std::ofstream ofs;
 
   floatInputs = read_file(fileName);
 
+  floatOutputs = convolution (FILTER_COE, floatInputs, 23, N);
+  for (int i = 0; i < N; i++)
+  {
+    powerOfFp += floatOutputs[i] * floatOutputs[i];
+  }
+
   for (int j = 1; j < 16; j++)
   {
-    float powerOfFp = 0, powerOfDiff = 0;
+    float powerOfDiff = 0, powerOfDiffs = 0;
 
     for (int i = 0; i < N; i++)
 	{
 	  fixedInputs[i] = float_to_fixed (floatInputs[i], 1, j);
-	  //cout << fixedInputs[i] << endl;
 	}
 	
     for (int i = 0; i < 23; i++)
@@ -120,19 +104,47 @@ int main ()
 	  FIXED_FILTER_COE[i] = float_to_fixed (FILTER_COE[i], 1, j);
 	}
 
-      floatOutputs = convolution (FILTER_COE, floatInputs, 23, N);
-      fixedOutputs = convolution (FILTER_COE, fixedInputs, 23, N);
+      semiOutputs = convolution (FILTER_COE, fixedInputs, 23, N);
+      fixedOutputs = convolution (FIXED_FILTER_COE, fixedInputs, 23, N);	  
 
 	  for (int i = 0; i < N; i++)
 	{
-	  // cout<<ptr1[i]<<", "<<ptr2[i]<<endl;
-	  powerOfFp += floatOutputs[i] * floatOutputs[i];
 	  powerOfDiff += (floatOutputs[i] - fixedOutputs[i]) * (floatOutputs[i] - fixedOutputs[i]);
+	  powerOfDiffs += (floatOutputs[i] - semiOutputs[i]) * (floatOutputs[i] - semiOutputs[i]);
 	}
 
-      outputSNR[j] = 10 * log10 (powerOfFp / powerOfDiff);
-      cout << outputSNR[j] << endl;
+      outputSNR1[j] = 10 * log10 (powerOfFp / powerOfDiffs);
+      outputSNR2[j] = 10 * log10 (powerOfFp / powerOfDiff);
+      cout << outputSNR1[j] << ", " << outputSNR2[j] <<endl;
     }
+
+	ofs.open("output_SNR_1.txt");
+	if(!ofs.is_open())
+	{
+		cout << "Write file fail" << endl;
+	}
+	else
+	{
+	  for (int i = 0; i < 15; i++)
+	  {
+		  ofs << outputSNR1[i] << endl;
+	  }
+	}
+	ofs.close();
+	
+	ofs.open("output_SNR_2.txt");
+	if(!ofs.is_open())
+	{
+		cout << "Write file fail" << endl;
+	}
+	else
+	{
+	  for (int i = 0; i < 15; i++)
+	  {
+		  ofs << outputSNR2[i] << endl;
+	  }
+	}
+	ofs.close();
 
   return 0;
 }
