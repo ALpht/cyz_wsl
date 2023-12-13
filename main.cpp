@@ -3,13 +3,10 @@
 #include <math.h>
 #include <time.h>
 #define N 1000
+using namespace std; 
 
-using namespace std;
-
-// floating point to fixed point conversion
-float float_to_fixed (float fp, int INTW, int fracBits)
-{
-	float upperBound = pow(2.0, INTW - 1) - pow(2.0, -fracBits);
+float float_to_fixed (float fp, int INTW, int fracBits) {
+   	float upperBound = pow(2.0, INTW - 1) - pow(2.0, -fracBits);
 	float lowerBound = -pow(2.0, INTW - 1);
 	float scaleFactor = pow(2.0, fracBits);
 	
@@ -26,7 +23,6 @@ float float_to_fixed (float fp, int INTW, int fracBits)
 	return result;
 }
 
-// convolution operation
 float *convolution (float filterCoefficient[], float inputs[], int coeLen, int inputLen)
 {
   float delayElements[coeLen - 1] = { 0 };
@@ -46,7 +42,6 @@ float *convolution (float filterCoefficient[], float inputs[], int coeLen, int i
   return ptr;
 }
 
-// read .txt file 
 float *read_file(char fileName[], int len)
 {
 	ifstream inFile;
@@ -145,10 +140,9 @@ int main (int argc, char* argv[])
 	{
 	  for (int i = 0; i < 15; i++)
 	  {
-		  ofs << outputSNR2[i] << endl;
+		  ofs << outputSNR2[i] <<endl;
 	  }
 	}
-	ofs.close();
 
-  return 0;
+	return 0;
 }
