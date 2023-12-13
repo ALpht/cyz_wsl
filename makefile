@@ -1,7 +1,7 @@
-pointer00 : pointer00.o
-	gcc -o pointer00 pointer00.o
-pointer00.o : pointer00.c
-	gcc -c pointer00.c
+main : main.o
+	g++ -o main main.o
+main.o : main.cpp
+	g++ -c main.cpp
 clean:
-	rm *.o
+	rm *.o main
 	

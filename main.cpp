@@ -6,6 +6,7 @@
 
 using namespace std;
 
+// floating point to fixed point conversion
 float float_to_fixed (float fp, int INTW, int fracBits)
 {
 	float upperBound = pow(2.0, INTW - 1) - pow(2.0, -fracBits);
@@ -25,6 +26,7 @@ float float_to_fixed (float fp, int INTW, int fracBits)
 	return result;
 }
 
+// convolution operation
 float *convolution (float filterCoefficient[], float inputs[], int coeLen, int inputLen)
 {
   float delayElements[coeLen - 1] = { 0 };
@@ -44,13 +46,13 @@ float *convolution (float filterCoefficient[], float inputs[], int coeLen, int i
   return ptr;
 }
 
-float *read_file(char fileName[])
+// read .txt file 
+float *read_file(char fileName[], int len)
 {
 	ifstream inFile;
 	inFile.open(fileName);
 	float temp;
-	static float result[1000];
-	float *ptr = &result[0];
+	float *ptr = (float *) malloc(len * sizeof(float));
 	int i = 0;
 	
 	while(!inFile.eof())
@@ -58,31 +60,33 @@ float *read_file(char fileName[])
 		inFile >> temp;
 		if(!inFile.fail())
 		{
-			result[i] = temp;			
+			ptr[i] = temp;			
 			i++;
 		}
 	}
+	inFile.close();
 	
 	return ptr;
 }	
 
-int main ()
+int main (int argc, char* argv[])
 {
-  float FILTER_COE[23] =
+  /*float FILTER_COE[23] =
     { 0.013239156, 0.0043691504, -0.022531772, -0.036399439, -0.0046777544,
 0.039288234, 0.020806413, -0.059205871, -0.079080485, 0.068135582, 0.30790523, 0.42687139,
 0.30790523, 0.068135582, -0.079080485, -0.059205871, 0.020806413, 0.039288234, -0.0046777544,
--0.036399439, -0.022531772, 0.0043691504, 0.013239156 };
+-0.036399439, -0.022531772, 0.0043691504, 0.013239156 };*/
+  float *FILTER_COE = NULL;
   float FIXED_FILTER_COE[23];
   float powerOfFp = 0;
   float fixedInputs[N];
   float *floatOutputs = NULL, *fixedOutputs = NULL, *floatInputs =  NULL;
   float *semiOutputs = NULL;
   float outputSNR1[15] = { 0 }, outputSNR2[15] = {0};
-  char fileName[] = "rand_data.txt";
   std::ofstream ofs;
 
-  floatInputs = read_file(fileName);
+  floatInputs = read_file(argv[1], N);
+  FILTER_COE = read_file(argv[2], 23);
 
   floatOutputs = convolution (FILTER_COE, floatInputs, 23, N);
   for (int i = 0; i < N; i++)
